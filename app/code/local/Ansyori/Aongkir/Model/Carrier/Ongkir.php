@@ -44,7 +44,7 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 			$string_city = Mage::getSingleton('checkout/session')->getQuote()->getShippingAddress()->getCity();
 			
 			
-			$sql = "select * from daftar_alamat where concat(type,' ',city_name) = '$string_city' limit 0,1 ";
+			$sql = "select * from ".Mage::getConfig()->getTablePrefix()."daftar_alamat where concat(type,' ',city_name) = '$string_city' limit 0,1 ";
 			
 			$res =  $this->helper()->fetchSql($sql);
 			
@@ -72,9 +72,9 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 				foreach($rates_by_kurir as $final_list)
 				{
 					if($weight > 29):
-						$ship_cost = $final_list['cost'] * $weight;
+						$ship_cost = $this->changePrice($final_list['cost']) * $weight;
 					else:
-						$ship_cost = $final_list['cost'];
+						$ship_cost = $this->changePrice($final_list['cost']);
 					endif;
 					
 					$rate_list[] = array(
@@ -94,6 +94,81 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 			return explode(',',strtolower($this->helper()->config('kurir')));
 		}
 		
+		
+		public function changePrice($price)
+		{
+			$set = $this->helper()->config('changeprice');
+			
+			if(!$set):
+				return $price;
+			
+			else:
+			/*if (strpos($a,'are') !== false) {
+				echo 'true';
+			}*/
+			
+			$found_persen = false;
+			
+			if (strpos($set,'%') !== false) {
+				//echo 'true';
+				
+				$found_persen = true;
+				
+				$set = str_replace('%','',$set);
+			};
+			
+			$found_minus = false;
+			
+			if (strpos($set,'-') !== false) {
+				//echo 'true';
+				
+				$found_minus = true;
+				$set = str_replace('-','',$set);
+				
+			};
+			
+			$found_plus = false;
+			
+			if (strpos($set,'+') !== false) {
+				//echo 'true';
+				
+				$found_plus = true;
+				$set = str_replace('+','',$set);
+				
+			};
+			
+			$final_set = $set ;
+			$changed_price = 0;
+			if($found_persen)
+			{
+				$changed_price = ($price * $set) / 100;
+			}else
+			{
+				$changed_price = abs($set);
+			};
+			
+			if($found_minus)
+			{
+				return $price - $changed_price;
+			};
+			
+			if($found_plus)
+			{
+				return $price + $changed_price;
+			};
+			
+			
+			
+			
+			
+			//$final_price
+			
+			
+			
+				return $price; 
+			endif;
+		}
+		
 		public function getOriginId()
 		{
 			return $this->helper()->config('origin');
@@ -106,6 +181,10 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 			foreach($items as $item) {
 				$totalWeight += ($item->getWeight() * $item->getQty()) ;
 			}
+			
+			if($totalWeight < 1)
+			$totalWeight = 1;
+			
 			
 			return $totalWeight;
 		}
@@ -133,5 +212,9 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 		public function getAllowedMethods()
 		{
 			return array($this->_code=>$this->getConfigData('name'));
+		}
+		public function isTrackingAvailable()
+		{
+			return true;
 		}
     }  

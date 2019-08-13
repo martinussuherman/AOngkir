@@ -202,7 +202,7 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 		$model = Mage::getModel('aongkir/area');
 		
 		$sql_delete_region = "
-			DELETE FROM ".$this->getPrefixTable()."directory_country_region WHERE country_id = 'ID' 
+			DELETE FROM ".Mage::getConfig()->getTablePrefix()."directory_country_region WHERE country_id = 'ID' 
 		";
 		
 		
@@ -222,7 +222,7 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 			
 			
 			$sql_insert_province = "
-			INSERT INTO  directory_country_region (country_id,code,default_name)
+			INSERT INTO  ".Mage::getConfig()->getTablePrefix()."directory_country_region (country_id,code,default_name)
 			VALUES ('ID','$code_prov','$name_prov')
 			";
 			

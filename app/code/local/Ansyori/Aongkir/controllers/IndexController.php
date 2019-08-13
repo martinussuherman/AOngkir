@@ -14,6 +14,14 @@ class Ansyori_Aongkir_IndexController extends Mage_Core_Controller_Front_Action{
 	  
     }
 	
+	public function refreshareaAction()
+	{
+		echo 'START Reinstall Province City'.'<br>';
+		$this->helper()->saveAreaToDb();
+		echo 'END Reinstall Province City'.'<br>';
+		
+	}
+	
 	public function cityAction()
 	{
 			$model = Mage::getModel('aongkir/area');
@@ -77,5 +85,10 @@ class Ansyori_Aongkir_IndexController extends Mage_Core_Controller_Front_Action{
 			
 			
 			echo $string."{value: 'Kabupaten Badung', data: '17' },{ value: 'Kabupaten Bangli', data: '32' },{ value: 'Kabupaten Buleleng', data: '94' },{ value: 'Kota Denpasar', data: '114' },{ value: 'Kabupaten Gianyar', data: '128' },{ value: 'Kabupaten Jembrana', data: '161' },{ value: 'Kabupaten Karangasem', data: '170' },{ value: 'Kabupaten Klungkung', data: '197' },{ value: 'Kabupaten Tabanan', data: '447' },";
+	}
+	
+	public function helper($type = 'aongkir')
+	{
+			return Mage::helper($type);	
 	}
 }
