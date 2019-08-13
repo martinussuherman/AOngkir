@@ -30,8 +30,111 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 		return $this->config('apiurl');
 	}
 	
+	public function getActiveCarriers()
+	{
+			return explode(',',strtolower($this->config('kurir')));
+	}
+	
+	public function isDisabledSavedShippingRates()
+	{
+		return $this->config('disablecached');
+	}
+	
+	public function getSavedRates($origin,$dest,$weight,$kurir)
+	{
+		
+		if($this->isDisabledSavedShippingRates())
+		{
+			return $this->getRates($origin,$dest,$weight,$kurir); 
+		};
+		
+		$array_rates = array();
+		$sql = "SELECT distinct dari,ke, harga, kurir, servis,text FROM aongkir_save_rates 
+				where dari='$origin' and ke='$dest' and kurir='$kurir' ";
+				
+		$sql = $this->fetchSql($sql);
+		$count = 0;
+		foreach($sql as $datax)
+		{
+			$count++;
+			$array_rates[] = array(
+			
+					'text'=> $datax['text'].' - ',
+					'cost'=> $datax['harga'] * $weight
+			);
+		};
+		
+		if($count)
+		{
+				return $array_rates;
+		}else{
+			return $this->getRates($origin,$dest,$weight,$kurir);
+		};
+	}
+	
+	public function grabAllRates($refreshAll = 0)
+	{
+		$this->createAdditionalTable();
+		$origin = $this->config('origin');
+		
+		if($refreshAll):
+			$sql = "delete from aongkir_save_rates";
+			
+			try{
+				$this->sql($sql);
+				echo 'clear rates sukses'.'<br>';
+			}catch(Exception $xx)
+			{
+				$this->setLog('Erorr Sql : '.$xx->getMessage());
+				echo 'clear rates GAGAL'.'<br>';
+			};  
+		endif;
+		
+		$sql = "select distinct city_id from daftar_alamat where city_id not in (select distinct ke from aongkir_save_rates where dari='$origin'  order by rand() ) ";   
+		$sql = $this->fetchSql($sql);
+		$kurir_list = $this->getActiveCarriers();
+		foreach($sql as $dats)
+		{
+			foreach($kurir_list as $kurir)
+			{
+				try{
+					$this->getRates($origin,$dats['city_id'],1,$kurir);
+					echo 'sukses grab origin : '.$origin.' city id :'.$dats['city_id'].' kurir:'.$kurir.'<br>';
+				}catch(Exception $xx)
+				{
+					$this->setLog('Erorr Sql : '.$xx->getMessage());
+					echo 'GAGAL  grab origin : '.$origin.' city id :'.$dats['city_id'].' kurir:'.$kurir.'<br>';
+					
+				};
+			};
+		}; 
+		
+	} 
+	
+	public function saveRate($origin,$dest,$harga,$kurir,$servis,$text)
+	{
+		if($this->isDisabledSavedShippingRates())
+		{
+			return true;
+		};
+		
+		$this->createAdditionalTable();
+		
+		$sql = "insert into aongkir_save_rates(dari,ke,harga,kurir,servis,text,lup)  
+		values('$origin','$dest','$harga','$kurir','$servis','$text',now()) ";
+		
+		try{
+			$this->sql($sql);
+		}catch(Exception $xx)
+		{
+			$this->setLog('Erorr Sql : '.$xx->getMessage());
+			return false;
+		};
+	}
+	
 	public function getRates($origin,$dest,$weight,$kurir)
 	{
+		$ori_weight = $weight;
 		$weight = $weight * 1000;
 		$post_fields = "origin=$origin&destination=$dest&weight=$weight&courier=$kurir";
 		
@@ -58,7 +161,8 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 					'text'=> $text.' '.$main_rates['note'],
 					'cost'=> $main_rates['value']
 			);
-			
+			$harga_perkilo = round($main_rates['value']/$ori_weight,0); 
+			$this->saveRate($origin,$dest,$harga_perkilo,$name_kurir,$listrates['service'],$text);
 			endforeach;
 		}
 		
@@ -74,6 +178,7 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 		$this->setLog('URL : '.$this->getApiUrl().$method);
 		
 		$curl = curl_init();
+
 
 		curl_setopt_array($curl, array(
 		  CURLOPT_URL => $this->getApiUrl().$method,
@@ -296,6 +401,31 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 		}
 		
 		return $string;
+	}
+	
+	public function createAdditionalTable()
+	{
+			$sql = '
+			CREATE TABLE IF NOT EXISTS `aongkir_save_rates` (
+		  `idx` int(6) unsigned NOT NULL AUTO_INCREMENT,
+		  `dari` varchar(255) NOT NULL,
+		  `ke` varchar(30) NOT NULL,
+		  `harga` decimal(19,4) DEFAULT NULL,
+		  `lup` datetime DEFAULT NULL,
+		  `kurir` varchar(255) NOT NULL,
+		  `servis` varchar(255) NOT NULL,
+		  `text` text NOT NULL,
+		  PRIMARY KEY (`idx`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+			';
+		try{
+			$this->sql($sql);
+
+		}catch(Exception $xx)
+		{
+			$this->setLog('Erorr Sql : '.$xx->getMessage());
+			return false;
+		}
 	}
 	
 }

@@ -9,5 +9,8 @@
 class Ansyori_Aongkir_Model_Cron{	
 	public function UpdateAlamat(){
 		//do something
+		$helper = Mage::helper('aongkir')->grabAllRates(1);
+		$helper = Mage::helper('aongkir')->saveAreaToDb();
+		
 	} 
 }

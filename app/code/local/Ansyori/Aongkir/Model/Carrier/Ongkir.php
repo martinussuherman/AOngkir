@@ -65,9 +65,9 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 			foreach($carriers as $kurir)
 			{
 				if($weight > 29){
-					$rates_by_kurir = $this->helper()->getRates($origin,$dest,1,$kurir);
+					$rates_by_kurir = $this->helper()->getSavedRates($origin,$dest,1,$kurir);
 				}else{
-					$rates_by_kurir = $this->helper()->getRates($origin,$dest,$weight,$kurir);
+					$rates_by_kurir = $this->helper()->getSavedRates($origin,$dest,$weight,$kurir);
 				};
 				foreach($rates_by_kurir as $final_list)
 				{

@@ -91,4 +91,9 @@ class Ansyori_Aongkir_IndexController extends Mage_Core_Controller_Front_Action{
 	{
 			return Mage::helper($type);	
 	}
+	
+	public function refreshratesAction()
+	{
+		$this->helper()->grabAllRates();
+	}
 }
