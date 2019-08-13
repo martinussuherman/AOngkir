@@ -1,0 +1,16 @@
+{
+    "name": "OpenMageModuleFostering/aongkir",
+    "type": "magento-module",
+    "license": "open-source",
+    "homepage": "",
+    "description": "Indonesian Shippping Carriers",
+    "authors": [
+    {
+        "name": "Ansyori",
+        "email": "ansyori@gmail.com"
+    }
+],
+    "suggest": {
+        "magento-hackathon/magento-composer-installer": "*"
+    }
+}
