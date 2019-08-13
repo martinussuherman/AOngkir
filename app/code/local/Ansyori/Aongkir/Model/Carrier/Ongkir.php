@@ -174,6 +174,11 @@ class Ansyori_Aongkir_Model_Carrier_Ongkir
 			return $this->helper()->config('origin');
 		}
 		
+		public function getDisabledServices()
+		{
+			return $this->helper()->config('disablesvr');
+		}
+		
 		public function getBeratTotal()
 		{
 			$items = Mage::getSingleton('checkout/session')->getQuote()->getAllItems();

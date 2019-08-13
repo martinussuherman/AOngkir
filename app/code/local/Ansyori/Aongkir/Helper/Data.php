@@ -40,6 +40,11 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 		return $this->config('disablecached');
 	}
 	
+	public function getDisabledServices()
+	{
+			return $this->config('disablesvr');
+	}
+	
 	public function getSavedRates($origin,$dest,$weight,$kurir)
 	{
 		
@@ -47,6 +52,13 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 		{
 			return $this->getRates($origin,$dest,$weight,$kurir); 
 		};
+		
+		
+		$disabled_servis = $this->getDisabledServices();
+		
+		$disabled_servis = explode(",",$disabled_servis);
+		
+		$concat_kurir_servis = '';
 		
 		$array_rates = array();
 		$sql = "SELECT distinct dari,ke, harga, kurir, servis,text FROM aongkir_save_rates 
@@ -57,11 +69,18 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 		foreach($sql as $datax)
 		{
 			$count++;
+			
+			$concat_kurir_servis = $datax['kurir'].'|'.$datax['servis'];
+			
+			
+			if(!in_array($concat_kurir_servis,$disabled_servis)):
 			$array_rates[] = array(
 			
 					'text'=> $datax['text'].' - ',
 					'cost'=> $datax['harga'] * $weight
 			);
+			
+			endif;
 		};
 		
 		if($count)
@@ -134,6 +153,15 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 	
 	public function getRates($origin,$dest,$weight,$kurir)
 	{
+		
+		$disabled_servis = $this->getDisabledServices();
+		
+		$disabled_servis = explode(",",$disabled_servis);
+		
+		$concat_kurir_servis = '';
+		
+		
+		
 		$ori_weight = $weight;
 		$weight = $weight * 1000;
 		$post_fields = "origin=$origin&destination=$dest&weight=$weight&courier=$kurir";
@@ -156,11 +184,19 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 			
 			
 			foreach($listrates['cost'] as $main_rates):
-			$array_rates[] = array(
 			
-					'text'=> $text.' '.$main_rates['note'],
-					'cost'=> $main_rates['value']
-			);
+			$concat_kurir_servis = $name_kurir.'|'.$listrates['service'];
+			
+			
+			if(!in_array($concat_kurir_servis,$disabled_servis)):
+				$array_rates[] = array(
+				
+						'text'=> $text.' '.$main_rates['note'],
+						'cost'=> $main_rates['value']
+				);
+			endif;
+			
+			
 			$harga_perkilo = round($main_rates['value']/$ori_weight,0); 
 			$this->saveRate($origin,$dest,$harga_perkilo,$name_kurir,$listrates['service'],$text);
 			endforeach;
@@ -417,7 +453,12 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 		  `text` text NOT NULL,
 		  PRIMARY KEY (`idx`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+		
+		
+		
 			';
+			
+		
 		try{
 			$this->sql($sql);
 
