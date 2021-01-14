@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Indonesia Shipping Carriers
  * @copyright   Copyright (c) 2015 Ansyori B.
@@ -51,5 +52,3 @@ idx int(10) unsigned NOT NULL auto_increment,
 */
 
 $installer->endSetup();
-
-

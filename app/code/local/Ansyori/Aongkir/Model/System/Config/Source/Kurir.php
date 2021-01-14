@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Indonesia Shipping Carriers
  * @copyright   Copyright (c) 2015 Ansyori B.
@@ -8,7 +9,6 @@
  */
 class Ansyori_Aongkir_Model_System_Config_Source_Kurir
 {
-
     /**
      * Options getter
      *
@@ -17,11 +17,10 @@ class Ansyori_Aongkir_Model_System_Config_Source_Kurir
     public function toOptionArray()
     {
         return array(
-		
-            array('value' => 'JNE', 'label'=>Mage::helper('adminhtml')->__('JNE')),
-            array('value' => 'POS', 'label'=>Mage::helper('adminhtml')->__('POS')),
-            array('value' => 'TIKI', 'label'=>Mage::helper('adminhtml')->__('TIKI')),
+
+            array('value' => 'JNE', 'label' => Mage::helper('adminhtml')->__('JNE')),
+            array('value' => 'POS', 'label' => Mage::helper('adminhtml')->__('POS')),
+            array('value' => 'TIKI', 'label' => Mage::helper('adminhtml')->__('TIKI')),
         );
     }
-
 }

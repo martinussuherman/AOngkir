@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Indonesia Shipping Carriers
  * @copyright   Copyright (c) 2015 Ansyori B.
@@ -8,11 +9,8 @@
  */
 class Ansyori_Aongkir_Model_Area extends Mage_Core_Model_Abstract
 {
-    protected function _construct(){
-
-       $this->_init("aongkir/area");
-
+    protected function _construct()
+    {
+        $this->_init("aongkir/area");
     }
-
 }
-	 
