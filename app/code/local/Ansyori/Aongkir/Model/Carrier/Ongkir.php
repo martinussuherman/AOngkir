@@ -19,21 +19,14 @@ implements Mage_Shipping_Model_Carrier_Interface
 			return false;
 		}
 
-		$list_euy = $this->getListRates();
-
+		$rate_list = $this->getListRates($request);
 		$result = Mage::getModel('shipping/rate_result');
 		$count = 0;
 
-		foreach ($list_euy as $jangar_kana_hulu) {
+		foreach ($rate_list as $rate) {
 			$count++;
 			//getMethodRates($code,$title,$name,$rates)
-			$method = $this->getMethodRates(
-				'_' . $count,
-				'',
-				$jangar_kana_hulu['text'],
-				$jangar_kana_hulu['cost']
-			);
-			$result->append($method);
+			$result->append($this->getMethodRates('_' . $count, '', $rate['text'], $rate['cost']));
 		}
 
 		return $result;
@@ -54,11 +47,11 @@ implements Mage_Shipping_Model_Carrier_Interface
 		return $res[0]['city_id'];
 	}
 
-	public function getListRates()
+	public function getListRates(Mage_Shipping_Model_Rate_Request $request)
 	{
 		$origin = $this->getOriginId();
 		$dest = $this->getCityId();
-		$weight = $this->getBeratTotal();
+		$weight = $this->getBeratTotal($request);
 		$carriers = $this->getActiveCarriers();
 
 		$rate_list = array();
@@ -161,14 +154,9 @@ implements Mage_Shipping_Model_Carrier_Interface
 		return $this->helper()->config('disablesvr');
 	}
 
-	public function getBeratTotal()
+	private function getBeratTotal(Mage_Shipping_Model_Rate_Request $request)
 	{
-		$items = Mage::getSingleton('checkout/session')->getQuote()->getAllItems();
-		$totalWeight = 0;
-
-		foreach ($items as $item) {
-			$totalWeight += ($item->getWeight() * $item->getQty());
-		}
+		$totalWeight = $request->getPackageWeight();
 
 		if ($totalWeight < 1) {
 			$totalWeight = 1;
