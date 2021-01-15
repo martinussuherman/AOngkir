@@ -49,42 +49,32 @@ implements Mage_Shipping_Model_Carrier_Interface
 
 	public function getListRates(Mage_Shipping_Model_Rate_Request $request)
 	{
-		$origin = $this->getOriginId();
-		$dest = $this->getCityId();
 		$weight = $this->getBeratTotal($request);
-		$carriers = $this->getActiveCarriers();
 
+		$rates_by_kurir = $this->helper()->getSavedRates(
+			$this->getOriginId(), 
+			$this->getCityId(), 
+			$weight, 
+			$this->getActiveCarriersListPostData($this->getActiveCarriers()));
 		$rate_list = array();
-		//getRates($origin,$dest,$weight,$kurir)
 
-		foreach ($carriers as $kurir) {
-			if ($weight > 29) {
-				$rates_by_kurir = $this->helper()->getSavedRates($origin, $dest, 1, $kurir);
-			} else {
-				$rates_by_kurir = $this->helper()->getSavedRates($origin, $dest, $weight, $kurir);
-			}
-
-			foreach ($rates_by_kurir as $final_list) {
-				if ($weight > 29) {
-					$ship_cost = $this->changePrice($final_list['cost']) * $weight;
-				} else {
-					$ship_cost = $this->changePrice($final_list['cost']);
-				}
-
-				$rate_list[] = array(
-					'text' => $final_list['text'] . "($weight Kg)",
-					'cost' => $ship_cost
-				);
-			}
+		foreach ($rates_by_kurir as $final_list) {
+			$rate_list[] = array(
+				'text' => $final_list['text'] . "($weight Kg)", 
+				'cost' => $this->changePrice($final_list['cost']) * $weight);
 		}
 
 		$this->helper()->setLog('Final rate ' . print_r($rate_list, true));
 		return $rate_list;
 	}
 
-	public function getActiveCarriers()
+	private function getActiveCarriers()
 	{
 		return explode(',', strtolower($this->helper()->config('kurir')));
+	}
+	private function getActiveCarriersListPostData(array $activeCarriersList)
+	{
+		return implode(":", $activeCarriersList);
 	}
 
 	public function changePrice($price)

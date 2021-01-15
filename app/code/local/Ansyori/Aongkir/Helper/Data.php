@@ -136,42 +136,46 @@ class Ansyori_Aongkir_Helper_Data extends Mage_Core_Helper_Abstract
 
 	public function getRates($origin, $dest, $weight, $kurir)
 	{
-		$disabled_servis = $this->getDisabledServices();
-		$disabled_servis = explode(",", $disabled_servis);
-		$concat_kurir_servis = '';
-
 		$ori_weight = $weight;
 		$weight = $weight * 1000;
-		$post_fields = "origin=$origin&destination=$dest&weight=$weight&courier=$kurir";
-		$post = $this->requestPost('/cost', $post_fields);
-		$array_rates = array();
+		$post = $this->requestPost(
+			"/cost",
+			"origin=$origin&originType=city&destination=$dest&destinationType=city&weight=$weight&courier=$kurir"
+		);
 
 		if ($post['rajaongkir']['status']['code'] != '200') {
 			return false;
 		}
 
-		$name_kurir = strtoupper($post['rajaongkir']['results'][0]['code']);
+		$result = array();
 
-		foreach ($post['rajaongkir']['results'][0]['costs'] as $listrates) {
-			$text = $name_kurir . ' ' . '(' . $listrates['service'] . ') ' . $listrates['description'];
+		foreach ($post['rajaongkir']['results'] as $list_couriers) {
+			$courier_code = $list_couriers['code'];
 
-			foreach ($listrates['cost'] as $main_rates) {
-				$concat_kurir_servis = $name_kurir . '|' . $listrates['service'];
+			foreach ($list_couriers['costs'] as $list_courier_costs) {
+				$service_code = $list_courier_costs['service'];
+				$service_info = $service_code . ' - ' . $list_couriers['name'] . ' ' .
+					$list_courier_costs['description'];
 
-				if (!in_array($concat_kurir_servis, $disabled_servis)) {
-					$array_rates[] = array(
+				foreach ($list_courier_costs['cost'] as $service_rate) {
+					if (!in_array(
+						$courier_code . '|' . $service_code,
+						explode(",", $this->getDisabledServices())
+					)) {
+						$result[] = array(
+							'text' => $service_info . ' ' . $service_rate['note'],
+							'cost' => $service_rate['value']
+						);
+					}
 
-						'text' => $text . ' ' . $main_rates['note'],
-						'cost' => $main_rates['value']
-					);
+					// TODO : remove saving to database
+					$harga_perkilo = round($service_rate['value'] / $ori_weight, 0);
+					$this->saveRate($origin, $dest, $harga_perkilo, $courier_code, $service_code, $service_info);
 				}
-
-				$harga_perkilo = round($main_rates['value'] / $ori_weight, 0);
-				$this->saveRate($origin, $dest, $harga_perkilo, $name_kurir, $listrates['service'], $text);
 			}
 		}
 
-		return $array_rates;
+		return $result;
 	}
 
 	public function requestPost($method, $postfield)
